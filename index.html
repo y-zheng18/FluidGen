@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="FluidGen: Physics-Aware Fluid Video Generation via Motion-Guided Post-Training">
+  <meta name="keywords" content="Fluid Simulation, Video Generation, Diffusion, Smoke, Fire, Velocity Field, DPO">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FluidGen: Physics-Aware Fluid Video Generation via Motion-Guided Post-Training</title>
+
+  <meta property="og:title" content="FluidGen: Physics-Aware Fluid Video Generation">
+  <meta property="og:description" content="A video diffusion model that jointly generates RGB and 3D velocity fields for realistic smoke, fire, and explosions.">
+  <meta property="og:image" content="./static/images/teaser_v3.jpg">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script defer src="./static/js/index.js"></script>
+</head>
+<body>
+
+<!-- HERO / TITLE -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">
+            <span class="fluidgen">FluidGen</span>: Physics-Aware Fluid Video Generation via Motion-Guided Post-Training
+          </h1>
+          <!-- TODO: venue -->
+          <!-- <div class="is-size-4 publication-venue">SIGGRAPH Asia 2026</div> -->
+
+          <!-- TODO: confirm affiliations -->
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://y-zheng18.github.io/">Yang Zheng</a><sup>*</sup>,</span>
+            <span class="author-block"><a href="https://kyleleey.github.io/">Zizhang Li</a><sup>*</sup>,</span>
+            <span class="author-block"><a href="https://boyangdeng.com/">Boyang Deng</a><sup>*</sup>,</span>
+            <span class="author-block"><a href="https://janackermann.info/">Jan Ackermann</a>,</span>
+            <span class="author-block"><a href="https://www.linkedin.com/in/lei-shu/">Lei Shu</a>,</span>
+            <span class="author-block"><a href="https://justimyhxu.github.io/">Yinghao Xu</a>,</span>
+            <br>
+            <span class="author-block"><a href="https://jiajunwu.com/">Jiajun Wu</a>,</span>
+            <span class="author-block"><a href="https://stanford.edu/~gordonwz/">Gordon Wetzstein</a>,</span>
+            <span class="author-block"><a href="https://geometry.stanford.edu/?member=guibas">Leonidas Guibas</a></span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Stanford University</span>
+          </div>
+          <div class="is-size-6 publication-authors equal-contrib">
+            <span class="author-block"><sup>*</sup>Equal contribution</span>
+          </div>
+
+          <div class="publication-links">
+            <!-- TODO: replace '#' with real links once available -->
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fab fa-youtube"></i></span><span>Video</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark is-soon" title="Coming soon">
+                <span class="icon"><i class="fab fa-github"></i></span><span>Code (soon)</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark is-soon" title="Coming soon">
+                <span class="icon"><i class="fas fa-database"></i></span><span>Data (soon)</span>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEASER -->
+<section class="hero teaser">
+  <div class="container teaser-container">
+    <div class="hero-body">
+      <div class="teaser-video-wrap">
+        <video id="teaser-video" autoplay muted loop playsinline>
+          <source src="./static/videos/teaser.mp4" type="video/mp4">
+        </video>
+        <div class="pair-labels"><span>Generated video</span><span>Velocity inferred from RGB</span></div>
+      </div>
+      <h2 class="subtitle has-text-centered teaser-caption">
+        <span class="fluidgen">FluidGen</span> generates realistic fluid dynamics together with their 3D velocity fields.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ABSTRACT -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Video generation models produce visually compelling motion but systematically fail on fluid phenomena,
+            including smoke, fire, and explosion debris, where outputs lack coherent vortical structure and collapse to
+            bland dynamics that violate the physics of real fluids. Classical solvers achieve high physical fidelity but
+            require detailed 3D scenes and carefully tuned parameters, making them impractical for in-the-wild imagery
+            and video generation. We address this gap by injecting a data-driven fluid prior into a pre-trained video model, trained on a
+            mixture of high-fidelity Houdini simulation data with paired velocity-field ground truth and curated
+            in-the-wild fluid video data for appearance diversity. The core of our approach is a dual-stream
+            architecture that predicts per-frame velocity fields alongside RGB, supervised by simulation ground truth.
+            This auxiliary signal regularizes generation toward physically consistent motion and exposes an
+            interpretable physical quantity that we further leverage as a reward for velocity-aware direct preference
+            optimization. Our model produces substantially more realistic fluid dynamics sequences than strong video
+            baselines and optimization-based methods.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METHOD -->
+<section class="section section-alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Method</h2>
+    <figure class="paper-figure">
+      <img src="./static/images/method.jpg" alt="FluidGen overview" loading="lazy">
+      <figcaption>
+        <b>Overview of FluidGen.</b> We augment a pretrained video diffusion model with a velocity prediction stream
+        and train it in two stages: joint supervised fine-tuning on simulated and in-the-wild fluid videos, followed
+        by velocity-aware DPO using physics-informed rewards.
+      </figcaption>
+    </figure>
+
+    <div class="columns is-variable is-5 method-cols">
+      <div class="column">
+        <div class="method-step">
+          <span class="step-num">1</span>
+          <h3 class="title is-5">Velocity as a video</h3>
+          <p>
+            Per-pixel 3D velocity is encoded as color via spherical coordinates, so it reuses the pretrained VAE.
+          </p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="method-step">
+          <span class="step-num">2</span>
+          <h3 class="title is-5">Dual-head joint diffusion</h3>
+          <p>
+            One shared Wan2.1 denoiser predicts RGB and velocity jointly, with zero-initialized velocity channels.
+          </p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="method-step">
+          <span class="step-num">3</span>
+          <h3 class="title is-5">Two-stage post-training</h3>
+          <p>
+            Joint fine-tuning on simulated and real videos, then DPO with a physics reward computed on predicted velocity.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHAPE TRANSITIONS -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Shape Transitions, with Generated Velocity</h2>
+    <p class="section-lead has-text-centered">
+      Guided by keyframes, FluidGen sculpts smoke into animals while keeping the motion physically plausible.
+      Switch between the generated RGB, the generated velocity encoded as color, and the velocity visualized as arrows.
+    </p>
+    <div class="shape-grid">
+      <div class="shape-card" data-name="smoke_horse">
+        <div class="stream-tabs">
+          <button class="is-active" data-stream="rgb">RGB</button>
+          <button data-stream="vel">Color velocity</button>
+          <button data-stream="arrows">Arrow velocity</button>
+        </div>
+        <video muted loop playsinline autoplay preload="metadata" src="./static/videos/shapes/smoke_horse_rgb.mp4"></video>
+        <p class="video-label">Smoke → Horse</p>
+      </div>
+      <div class="shape-card" data-name="horse_cat">
+        <div class="stream-tabs">
+          <button class="is-active" data-stream="rgb">RGB</button>
+          <button data-stream="vel">Color velocity</button>
+          <button data-stream="arrows">Arrow velocity</button>
+        </div>
+        <video muted loop playsinline autoplay preload="metadata" src="./static/videos/shapes/horse_cat_rgb.mp4"></video>
+        <p class="video-label">Horse → Cat</p>
+      </div>
+      <div class="shape-card" data-name="horse_wingdragon">
+        <div class="stream-tabs">
+          <button class="is-active" data-stream="rgb">RGB</button>
+          <button data-stream="vel">Color velocity</button>
+          <button data-stream="arrows">Arrow velocity</button>
+        </div>
+        <video muted loop playsinline autoplay preload="metadata" src="./static/videos/shapes/horse_wingdragon_rgb.mp4"></video>
+        <p class="video-label">Horse → Winged dragon</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEFORE / AFTER DPO -->
+<section class="section section-alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Effect of Velocity-Aware DPO</h2>
+    <p class="section-lead has-text-centered">
+      Same input image and seed. The base model Wan2.1-I2V-14B produces unnatural fluid motion with appearance
+      drift, joint fine-tuning (w/o DPO) makes the dynamics coherent, and DPO adds richer fine-scale detail
+      and more vivid fire and smoke motion.
+    </p>
+    <div class="video-card compare-card">
+      <div class="tri-labels">
+        <span>Wan2.1-I2V-14B</span>
+        <span>FluidGen w/o DPO</span>
+        <span class="ours">FluidGen (Ours)</span>
+      </div>
+      <video id="compare-video" muted loop playsinline autoplay preload="metadata" src="./static/videos/compare/001.mp4"></video>
+    </div>
+    <div class="thumb-strip" id="compare-thumbs">
+      <!-- populated by index.js -->
+    </div>
+  </div>
+</section>
+
+<!-- APPLICATIONS -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Applications</h2>
+
+    <div class="columns is-vcentered is-variable is-6 app-row">
+      <div class="column is-5">
+        <h3 class="title is-4">Velocity estimation from real videos</h3>
+        <p>
+          Given a real captured video as the RGB stream, RePaint-style conditional sampling lets FluidGen infer
+          the matching 3D velocity field. The recovered field shows coherent advection consistent with the observed smoke.
+        </p>
+      </div>
+      <div class="column is-7">
+        <div class="video-card">
+          <div class="tri-labels"><span>Real input</span><span>Inferred velocity</span><span>Arrow visualization</span></div>
+          <video class="lazy-video" style="aspect-ratio: 828 / 480" muted loop playsinline preload="none" data-src="./static/videos/apps/vel_real.mp4"></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-row">
+      <h3 class="title is-4">Driving fluid simulation</h3>
+      <p class="app-text">
+        The generated velocity fields are physically meaningful enough to be imported directly into Houdini and
+        used to simulate a new fluid source.
+      </p>
+      <!-- TODO: confirm panel labels (exp_001_seed42_rgb | exp_001_seed42_vel | exp_rgb) -->
+      <div class="video-card">
+        <div class="tri-labels"><span>FluidGen RGB</span><span>FluidGen velocity</span><span>Houdini simulation</span></div>
+        <video class="lazy-video" style="aspect-ratio: 2496 / 480" muted loop playsinline preload="none" data-src="./static/videos/apps/fluid_sim.mp4"></video>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="section section-alt">
+  <div class="container is-max-widescreen">
+    <h2 class="title is-3 has-text-centered">Gallery</h2>
+    <p class="section-lead has-text-centered">
+      Image-to-video results generated by FluidGen on in-the-wild images of fire, smoke, explosions, and ink.
+    </p>
+    <div class="gallery-grid" id="gallery-grid">
+      <!-- populated by index.js -->
+    </div>
+  </div>
+</section>
+
+<!-- BIBTEX -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <div class="bibtex-head">
+      <h2 class="title is-3">BibTeX</h2>
+      <button class="button is-small is-rounded" id="copy-bib"><span class="icon"><i class="far fa-copy"></i></span><span>Copy</span></button>
+    </div>
+    <!-- TODO: update venue -->
+<pre id="bibtex"><code>@article{zheng2026fluidgen,
+  title   = {FluidGen: Physics-Aware Fluid Video Generation via Motion-Guided Post-Training},
+  author  = {Zheng, Yang and Li, Zizhang and Deng, Boyang and Ackermann, Jan and Shu, Lei
+             and Xu, Yinghao and Wu, Jiajun and Wetzstein, Gordon and Guibas, Leonidas},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            This website is adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> template,
+            licensed under <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
