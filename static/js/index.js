@@ -58,7 +58,7 @@ function setupCompare() {
     const btn = document.createElement('button');
     btn.className = 'thumb' + (i === 0 ? ' is-active' : '');
     btn.setAttribute('aria-label', `Comparison ${id}`);
-    btn.innerHTML = `<img src="./static/videos/compare/${id}.jpg" alt="" loading="lazy"><span class="thumb-id">${id}</span>`;
+    btn.innerHTML = `<img src="./static/videos/compare/${id}.jpg" alt="" loading="lazy">`;
     btn.addEventListener('click', () => {
       strip.querySelectorAll('.thumb').forEach((b) => b.classList.remove('is-active'));
       btn.classList.add('is-active');
